@@ -1,13 +1,15 @@
+from pathlib import Path
 import streamlit as st
 import pickle
 import numpy as np
 
+BASE_DIR = Path(__file__).parent
 # Load model
-with open('model.pkl', 'rb') as f:
+with open(BASE_DIR / 'model.pkl', 'rb') as f:
     model = pickle.load(f)
 
 # Load scaler
-with open('scaler.pkl', 'rb') as f:
+with open(BASE_DIR / 'scaler.pkl', 'rb') as f:
     scaler = pickle.load(f)
 
 st.title("Advertising Sales Prediction")
