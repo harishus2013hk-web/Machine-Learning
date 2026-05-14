@@ -1,3 +1,12 @@
+## Dataset
+
+Download the dataset from Kaggle:
+
+- tmdb_5000_movies.csv
+- tmdb_5000_credits.csv
+
+Place both files in the project folder before running the project.
+
 # 🎬 Movie Recommendation System
 
 A Content-Based Movie Recommendation System built using Python and Machine Learning techniques. The project recommends similar movies based on movie metadata such as genres, keywords, cast, crew, and overview.
