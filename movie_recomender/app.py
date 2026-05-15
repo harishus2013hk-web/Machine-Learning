@@ -1,6 +1,8 @@
 import streamlit as st
 import pickle
 import pandas as pd
+import os
+import gdown
 
 # Page Configuration
 st.set_page_config(
@@ -15,7 +17,6 @@ st.markdown("""
     .main {
         background-color: #0E1117;
     }
-
     .title {
         text-align: center;
         font-size: 50px;
@@ -23,14 +24,12 @@ st.markdown("""
         color: #FF4B4B;
         margin-bottom: 10px;
     }
-
     .subtitle {
         text-align: center;
         font-size: 20px;
         color: #FAFAFA;
         margin-bottom: 30px;
     }
-
     .movie-card {
         background-color: #262730;
         padding: 15px;
@@ -41,7 +40,6 @@ st.markdown("""
         font-weight: 500;
         box-shadow: 0px 4px 10px rgba(0,0,0,0.3);
     }
-
     .stButton>button {
         width: 100%;
         border-radius: 10px;
@@ -51,7 +49,6 @@ st.markdown("""
         font-size: 18px;
         font-weight: bold;
     }
-
     .stSelectbox label {
         font-size: 18px;
         font-weight: bold;
@@ -60,52 +57,55 @@ st.markdown("""
     </style>
 """, unsafe_allow_html=True)
 
-# Load Data
-movies_list = pickle.load(open('movies.pkl', 'rb'))
-similarity = pickle.load(open('similarity.pkl', 'rb'))
+# ─────────────────────────────────────────────────────────────────
+# Download similarity.pkl from Google Drive (only on first run)
+# ─────────────────────────────────────────────────────────────────
+@st.cache_resource(show_spinner="⏳ Loading recommendation model, please wait...")
+def load_models():
+    if not os.path.exists("similarity.pkl"):
+        file_id = "PASTE_YOUR_FILE_ID_HERE"        # <── paste your Google Drive file ID here
+        url = f"https://drive.google.com/uc?id={file_id}"
+        gdown.download(url, "similarity.pkl", quiet=False)
 
+    movies = pickle.load(open("movies.pkl", "rb"))
+    similarity = pickle.load(open("similarity.pkl", "rb"))
+    return movies, similarity
+
+movies_list, similarity = load_models()
+
+# ─────────────────────────────────────────────────────────────────
 # Recommendation Function
+# ─────────────────────────────────────────────────────────────────
 def recommend(movie):
-
     idx = movies_list[movies_list['title'] == movie].index[0]
-
     distance = similarity[idx]
-
     movies = sorted(
         list(enumerate(distance)),
         reverse=True,
         key=lambda x: x[1]
     )[1:6]
-
     recommended_movies = []
-
     for i in movies:
         recommended_movies.append(movies_list.iloc[i[0]].title)
-
     return recommended_movies
 
-
-# Title Section
+# ─────────────────────────────────────────────────────────────────
+# UI
+# ─────────────────────────────────────────────────────────────────
 st.markdown('<div class="title">🎬 Movie Recommender</div>', unsafe_allow_html=True)
-
 st.markdown(
     '<div class="subtitle">Find movies similar to your favorite one</div>',
     unsafe_allow_html=True
 )
 
-# Movie Selection
 selected_movie = st.selectbox(
     "Choose a Movie",
     movies_list['title'].values
 )
 
-# Recommendation Button
 if st.button("Recommend Movies"):
-
     recommendations = recommend(selected_movie)
-
     st.markdown("## Recommended Movies 🍿")
-
     for movie in recommendations:
         st.markdown(
             f'<div class="movie-card">⭐ {movie}</div>',
