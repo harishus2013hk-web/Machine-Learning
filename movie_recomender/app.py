@@ -63,7 +63,7 @@ st.markdown("""
 @st.cache_resource(show_spinner="⏳ Loading recommendation model, please wait...")
 def load_models():
     if not os.path.exists("similarity.pkl"):
-        file_id = "PASTE_YOUR_FILE_ID_HERE"        # <── paste your Google Drive file ID here
+        file_id = "1SWFce8D8CbhAqP1Qlwreb3sTorn5eOCK"        # <── paste your Google Drive file ID here
         url = f"https://drive.google.com/uc?id={file_id}"
         gdown.download(url, "similarity.pkl", quiet=False)
 
