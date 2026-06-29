@@ -15,8 +15,13 @@ st.set_page_config(
 # ==========================================
 # Load Model and Encoders
 # ==========================================
-model = joblib.load("hospital_status_model.pkl")
-encoders = joblib.load("label_encoders.pkl")
+from pathlib import Path
+import joblib
+
+BASE_DIR = Path(__file__).parent
+
+model = joblib.load(BASE_DIR / "hospital_status_model.pkl")
+encoders = joblib.load(BASE_DIR / "label_encoders.pkl")
 
 # ==========================================
 # Sidebar
