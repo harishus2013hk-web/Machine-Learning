@@ -3,35 +3,55 @@ import pandas as pd
 import joblib
 
 # ==============================
-# Load Model and Scaler
+# Load Model, Scaler, Encoders, and Schema
 # ==============================
 
 model = joblib.load("loan_prediction_model.pkl")
 scaler = joblib.load("scaler.pkl")
+encoders = joblib.load("encoders.pkl")
+feature_columns = joblib.load("feature_columns.pkl")       # exact order used in training
+categorical_columns = joblib.load("categorical_columns.pkl")  # which of those were LabelEncoded
 
 # ==============================
 # Title
 # ==============================
 
 st.title("🏦 Loan Default Prediction System")
-
 st.write("Enter Customer Details")
 
 # ==============================
-# User Input
+# Widgets for known numeric fields (nicer labels/ranges than a generic box)
 # ==============================
 
-customer_age = st.number_input("Customer Age", 18, 100, 30)
+numeric_widgets = {
+    "customer_age": lambda: st.number_input("Customer Age", 18, 100, 30),
+    "customer_income": lambda: st.number_input("Customer Income", 1000, 1000000, 50000),
+    "employment_duration": lambda: st.number_input("Employment Duration (years)", 0, 40, 5),
+    "loan_amnt": lambda: st.number_input("Loan Amount", 1000, 1000000, 100000),
+    "loan_int_rate": lambda: st.number_input("Interest Rate (%)", 1.0, 30.0, 10.0),
+    "cred_hist_length": lambda: st.number_input("Credit History Length (years)", 1, 50, 5),
+    "term_years": lambda: st.selectbox("Loan Term (years)", [3, 5, 7]),
+}
 
-customer_income = st.number_input("Customer Income", 1000, 1000000, 50000)
+# ==============================
+# Build inputs by walking the SAME column list/order used in training
+# ==============================
 
-employment_duration = st.number_input("Employment Duration", 0, 40, 5)
+inputs = {}
 
-loan_amnt = st.number_input("Loan Amount", 1000, 1000000, 100000)
-
-loan_int_rate = st.number_input("Interest Rate (%)", 1.0, 30.0, 10.0)
-
-cred_hist_length = st.number_input("Credit History Length", 1, 50, 5)
+for col in feature_columns:
+    if col in categorical_columns:
+        # This column was LabelEncoded during training -> show the real
+        # category names and encode the choice with the SAME encoder,
+        # so the numeric code matches what the model was trained on.
+        label = col.replace("_", " ").title()
+        choice = st.selectbox(label, list(encoders[col].classes_))
+        inputs[col] = encoders[col].transform([choice])[0]
+    elif col in numeric_widgets:
+        inputs[col] = numeric_widgets[col]()
+    else:
+        # Fallback for any column not explicitly covered above
+        inputs[col] = st.number_input(col.replace("_", " ").title(), value=0.0)
 
 # ==============================
 # Prediction
@@ -39,15 +59,9 @@ cred_hist_length = st.number_input("Credit History Length", 1, 50, 5)
 
 if st.button("Predict"):
 
-    # Create DataFrame
-    data = pd.DataFrame({
-        "customer_age": [customer_age],
-        "customer_income": [customer_income],
-        "employment_duration": [employment_duration],
-        "loan_amnt": [loan_amnt],
-        "loan_int_rate": [loan_int_rate],
-        "cred_hist_length": [cred_hist_length]
-    })
+    # Build the row and force it into the EXACT column order the scaler
+    # and model were fit on -- this is what fixes the mismatch.
+    data = pd.DataFrame([inputs])[feature_columns]
 
     # Scale Input Data
     data_scaled = scaler.transform(data)
