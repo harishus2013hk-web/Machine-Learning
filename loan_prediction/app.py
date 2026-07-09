@@ -1,16 +1,20 @@
 import streamlit as st
 import pandas as pd
 import joblib
+from pathlib import Path
 
 # ==============================
 # Load Model, Scaler, Encoders, and Schema
 # ==============================
 
-model = joblib.load("loan_prediction_model.pkl")
-scaler = joblib.load("scaler.pkl")
-encoders = joblib.load("encoders.pkl")
-feature_columns = joblib.load("feature_columns.pkl")       # exact order used in training
-categorical_columns = joblib.load("categorical_columns.pkl")  # which of those were LabelEncoded
+
+BASE_DIR = Path(__file__).resolve().parent
+
+model = joblib.load(BASE_DIR / "loan_prediction_model.pkl")
+scaler = joblib.load(BASE_DIR / "scaler.pkl")
+encoders = joblib.load(BASE_DIR / "encoders.pkl")
+feature_columns = joblib.load(BASE_DIR / "feature_columns.pkl")
+categorical_columns = joblib.load(BASE_DIR / "categorical_columns.pkl")
 
 # ==============================
 # Title
