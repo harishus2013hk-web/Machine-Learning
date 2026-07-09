@@ -78,8 +78,14 @@ from sklearn.preprocessing import LabelEncoder
 encoder = LabelEncoder()
 
 # Encode all object-type columns
+encoders = {}
+
 for col in df.select_dtypes(include="object").columns:
-    df[col] = encoder.fit_transform(df[col])
+    le = LabelEncoder()
+    df[col] = le.fit_transform(df[col])
+    encoders[col] = le
+
+joblib.dump(encoders, "encoders.pkl")
 
 # ==========================================================
 # Step 5: Exploratory Data Analysis (EDA)
@@ -118,10 +124,21 @@ plt.show()
 # ==========================================================
 
 # Independent variables
-X = df.drop("Current_loan_status", axis=1)
+X = df.drop(["customer_id", "Current_loan_status"], axis=1)
 
 # Target variable
 y = df["Current_loan_status"]
+
+# --- Persist the exact feature order + which features are categorical ---
+# StandardScaler only remembers column POSITIONS once fit, so the app must
+# reconstruct rows in this exact order. We also record which of these
+# columns were LabelEncoded, so the app can encode user selections
+# with the SAME codes used during training.
+feature_columns = X.columns.tolist()
+categorical_columns = [c for c in feature_columns if c in encoders]
+
+joblib.dump(feature_columns, "feature_columns.pkl")
+joblib.dump(categorical_columns, "categorical_columns.pkl")
 
 # ==========================================================
 # Step 7: Feature Scaling
